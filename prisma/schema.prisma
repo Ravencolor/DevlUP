@@ -13,7 +13,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 enum Gender {
   MALE
   FEMALE
@@ -21,11 +20,42 @@ enum Gender {
 }
 
 model User {
-  userId        Int       @id @default(autoincrement())
+  userId        Int     @id @default(autoincrement())
   firstName     String?
-  lastName      String?   @default("")
+  lastName      String? @default("")
   gender        Gender?
   contactNumber String?
-  emailId       String    @unique
+  emailId       String  @unique
   password      String?
+  apis          Api[]
+}
+
+enum ApiVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ApiCategory {
+  FINANCE
+  SOCIAL
+  DATA
+  AI
+  HEALTH
+  WEATHER
+  ECOMMERCE
+  COMMUNICATION
+  OTHER
+}
+
+model Api {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  visibility  ApiVisibility @default(PUBLIC)
+  category    ApiCategory   @default(OTHER)
+  baseUrl     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      Int
+  user        User          @relation(fields: [userId], references: [userId])
 }
