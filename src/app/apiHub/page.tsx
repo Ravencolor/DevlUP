@@ -1,193 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-
-type Api = {
-  id: number;
-  name: string;
-  description: string;
-  visibility: "PUBLIC" | "PRIVATE";
-  category: string;
-  baseUrl: string | null;
-  createdAt: string;
-  user: {
-    firstName: string | null;
-    lastName: string | null;
-    emailId: string;
-  };
-};
-
-const MOCK_APIS: Api[] = [
-  {
-    id: 1,
-    name: "OpenWeather",
-    description:
-      "API météo complète avec prévisions sur 7 jours, données en temps réel, alertes météo et historique climatique pour n'importe quelle ville du monde.",
-    visibility: "PUBLIC",
-    category: "WEATHER",
-    baseUrl: "https://api.openweather.org/v3",
-    createdAt: "2026-02-15T10:30:00Z",
-    user: { firstName: "Karim", lastName: "Benzema", emailId: "karim@dev.io" },
-  },
-  {
-    id: 2,
-    name: "PayFlow",
-    description:
-      "Solution de paiement en ligne sécurisée. Gestion des transactions, abonnements récurrents, remboursements et rapports financiers détaillés.",
-    visibility: "PRIVATE",
-    category: "FINANCE",
-    baseUrl: "https://api.payflow.dev/v2",
-    createdAt: "2026-02-20T14:00:00Z",
-    user: { firstName: "Sara", lastName: "Martin", emailId: "sara@payflow.io" },
-  },
-  {
-    id: 3,
-    name: "ChatConnect",
-    description:
-      "API de messagerie instantanée avec support WebSocket, envoi de fichiers, réactions aux messages et création de groupes.",
-    visibility: "PUBLIC",
-    category: "COMMUNICATION",
-    baseUrl: "https://api.chatconnect.io/v1",
-    createdAt: "2026-01-10T09:15:00Z",
-    user: { firstName: "Youssef", lastName: "Aït", emailId: "youssef@chat.dev" },
-  },
-  {
-    id: 4,
-    name: "NeuroVision",
-    description:
-      "API d'intelligence artificielle pour la reconnaissance d'images, détection d'objets, OCR et génération de descriptions automatiques.",
-    visibility: "PUBLIC",
-    category: "AI",
-    baseUrl: "https://api.neurovision.ai/v2",
-    createdAt: "2026-03-01T16:45:00Z",
-    user: { firstName: "Léa", lastName: "Dupont", emailId: "lea@neuro.ai" },
-  },
-  {
-    id: 5,
-    name: "SocialPulse",
-    description:
-      "Agrégateur de réseaux sociaux : publiez, planifiez et analysez vos posts sur Twitter, Instagram et LinkedIn depuis une seule API.",
-    visibility: "PRIVATE",
-    category: "SOCIAL",
-    baseUrl: "https://api.socialpulse.app/v1",
-    createdAt: "2026-02-28T11:20:00Z",
-    user: { firstName: "Amine", lastName: "Radi", emailId: "amine@social.io" },
-  },
-  {
-    id: 6,
-    name: "MediTrack",
-    description:
-      "Suivi médical pour les patients : rendez-vous, ordonnances, résultats d'analyses et rappels de médicaments via notifications push.",
-    visibility: "PRIVATE",
-    category: "HEALTH",
-    baseUrl: "https://api.meditrack.health/v1",
-    createdAt: "2026-01-25T08:00:00Z",
-    user: { firstName: "Nadia", lastName: "El Fassi", emailId: "nadia@medi.dev" },
-  },
-  {
-    id: 7,
-    name: "ShopEngine",
-    description:
-      "API e-commerce tout-en-un : gestion de produits, panier, commandes, gestion de stock et intégration avec les transporteurs.",
-    visibility: "PUBLIC",
-    category: "ECOMMERCE",
-    baseUrl: "https://api.shopengine.store/v3",
-    createdAt: "2026-03-05T13:30:00Z",
-    user: { firstName: "Omar", lastName: "Sy", emailId: "omar@shop.dev" },
-  },
-  {
-    id: 8,
-    name: "DataForge",
-    description:
-      "Plateforme de transformation et nettoyage de données. Import CSV/JSON, pipelines ETL, visualisations et export vers BigQuery ou S3.",
-    visibility: "PUBLIC",
-    category: "DATA",
-    baseUrl: "https://api.dataforge.io/v2",
-    createdAt: "2026-02-10T17:00:00Z",
-    user: { firstName: "Fatima", lastName: "Zahra", emailId: "fatima@data.io" },
-  },
-  {
-    id: 9,
-    name: "TranslateX",
-    description:
-      "Traduction automatique en 120 langues avec détection de langue, traduction contextuelle et support de fichiers PDF/DOCX.",
-    visibility: "PUBLIC",
-    category: "AI",
-    baseUrl: "https://api.translatex.io/v1",
-    createdAt: "2026-03-08T10:00:00Z",
-    user: { firstName: "Hugo", lastName: "Bernard", emailId: "hugo@translate.dev" },
-  },
-  {
-    id: 10,
-    name: "CryptoWatch",
-    description:
-      "Données en temps réel sur les cryptomonnaies : prix, volumes, historiques, alertes de prix et analyse de tendances du marché.",
-    visibility: "PUBLIC",
-    category: "FINANCE",
-    baseUrl: "https://api.cryptowatch.market/v2",
-    createdAt: "2026-01-18T20:30:00Z",
-    user: { firstName: "Mehdi", lastName: "Tahri", emailId: "mehdi@crypto.io" },
-  },
-  {
-    id: 11,
-    name: "MailJet Express",
-    description:
-      "Envoi d'emails transactionnels et marketing : templates, A/B testing, analytics d'ouverture et gestion des listes de contacts.",
-    visibility: "PRIVATE",
-    category: "COMMUNICATION",
-    baseUrl: "https://api.mailjetexpress.com/v3",
-    createdAt: "2026-02-05T12:15:00Z",
-    user: { firstName: "Chloé", lastName: "Petit", emailId: "chloe@mail.dev" },
-  },
-  {
-    id: 12,
-    name: "GeoLocator",
-    description:
-      "Géolocalisation avancée : adresses, coordonnées GPS, calcul d'itinéraires, zones de chalandise et reverse geocoding.",
-    visibility: "PUBLIC",
-    category: "OTHER",
-    baseUrl: "https://api.geolocator.xyz/v1",
-    createdAt: "2026-03-02T15:45:00Z",
-    user: { firstName: "Rachid", lastName: "Mouni", emailId: "rachid@geo.io" },
-  },
-];
-
-const CATEGORIES = [
-  "ALL",
-  "FINANCE",
-  "SOCIAL",
-  "DATA",
-  "AI",
-  "HEALTH",
-  "WEATHER",
-  "ECOMMERCE",
-  "COMMUNICATION",
-  "OTHER",
-];
-
-const CATEGORY_COLORS: Record<string, string> = {
-  FINANCE: "bg-emerald-100 text-emerald-700",
-  SOCIAL: "bg-blue-100 text-blue-700",
-  DATA: "bg-purple-100 text-purple-700",
-  AI: "bg-pink-100 text-pink-700",
-  HEALTH: "bg-red-100 text-red-700",
-  WEATHER: "bg-cyan-100 text-cyan-700",
-  ECOMMERCE: "bg-amber-100 text-amber-700",
-  COMMUNICATION: "bg-indigo-100 text-indigo-700",
-  OTHER: "bg-gray-100 text-gray-700",
-};
-
-const CATEGORY_ICONS: Record<string, string> = {
-  FINANCE: "💰",
-  SOCIAL: "👥",
-  DATA: "📊",
-  AI: "🤖",
-  HEALTH: "🏥",
-  WEATHER: "🌤️",
-  ECOMMERCE: "🛒",
-  COMMUNICATION: "💬",
-  OTHER: "📦",
-};
+import Link from "next/link";
+import {
+  MOCK_APIS,
+  CATEGORIES,
+  CATEGORY_COLORS,
+  CATEGORY_ICONS,
+  type Api,
+} from "./mockData";
 
 export default function ApiHubPage() {
   const [allApis, setAllApis] = useState<Api[]>(MOCK_APIS);
@@ -520,65 +341,65 @@ function ApiCard({ api }: { api: Api }) {
   });
 
   return (
-    <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all duration-300 hover:-translate-y-1">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-            {api.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
+    <Link href={`/apiHub/${api.id}`} className="block">
+      <div className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all duration-300 hover:-translate-y-1 h-full">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+              {api.name.charAt(0).toUpperCase()}
+            </div>
             <h3 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
               {api.name}
             </h3>
           </div>
-        </div>
-        <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-            api.visibility === "PUBLIC"
-              ? "bg-green-100 text-green-700"
-              : "bg-orange-100 text-orange-700"
-          }`}
-        >
-          {api.visibility === "PUBLIC" ? "🌍 Public" : "🔒 Privé"}
-        </span>
-      </div>
-
-      {/* Description */}
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
-        {api.description}
-      </p>
-
-      {/* Base URL */}
-      {api.baseUrl && (
-        <div className="mb-4 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
-          <code className="text-xs text-gray-500 break-all">{api.baseUrl}</code>
-        </div>
-      )}
-
-      {/* Tags */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span
-          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-            CATEGORY_COLORS[api.category] || CATEGORY_COLORS.OTHER
-          }`}
-        >
-          {CATEGORY_ICONS[api.category]} {api.category}
-        </span>
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
-            {authorName.charAt(0).toUpperCase()}
-          </div>
-          <span className="text-xs text-gray-500 truncate max-w-[120px]">
-            {authorName}
+          <span
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              api.visibility === "PUBLIC"
+                ? "bg-green-100 text-green-700"
+                : "bg-orange-100 text-orange-700"
+            }`}
+          >
+            {api.visibility === "PUBLIC" ? "🌍 Public" : "🔒 Privé"}
           </span>
         </div>
-        <span className="text-xs text-gray-400">{createdDate}</span>
+
+        {/* Description */}
+        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+          {api.description}
+        </p>
+
+        {/* Base URL */}
+        {api.baseUrl && (
+          <div className="mb-4 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+            <code className="text-xs text-gray-500 break-all">{api.baseUrl}</code>
+          </div>
+        )}
+
+        {/* Tags */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span
+            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              CATEGORY_COLORS[api.category] || CATEGORY_COLORS.OTHER
+            }`}
+          >
+            {CATEGORY_ICONS[api.category]} {api.category}
+          </span>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+              {authorName.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-xs text-gray-500 truncate max-w-[120px]">
+              {authorName}
+            </span>
+          </div>
+          <span className="text-xs text-gray-400">{createdDate}</span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
