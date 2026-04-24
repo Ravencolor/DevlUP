@@ -24,6 +24,23 @@ enum VoteType {
   DOWN
 }
 
+enum ApiVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ApiCategory {
+  FINANCE
+  SOCIAL
+  DATA
+  AI
+  HEALTH
+  WEATHER
+  ECOMMERCE
+  COMMUNICATION
+  OTHER
+}
+
 model User {
   userId        Int      @id @default(autoincrement())
   firstName     String?
@@ -40,6 +57,7 @@ model User {
   threadVotes  ThreadVote[]
   commentVotes CommentVote[]
   bookmarks    Bookmark[]
+  apis         Api[]
 }
 
 model Thread {
@@ -129,4 +147,17 @@ model Bookmark {
   thread Thread @relation(fields: [threadId], references: [threadId])
 
   @@id([userId, threadId])
+}
+
+model Api {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  visibility  ApiVisibility @default(PUBLIC)
+  category    ApiCategory   @default(OTHER)
+  baseUrl     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      Int
+  user        User          @relation(fields: [userId], references: [userId])
 }
