@@ -54,8 +54,60 @@ model Api {
   visibility  ApiVisibility @default(PUBLIC)
   category    ApiCategory   @default(OTHER)
   baseUrl     String?
+  version     String        @default("1.0.0")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   userId      Int
   user        User          @relation(fields: [userId], references: [userId])
+  endpoints   Endpoint[]
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+}
+
+enum ParamLocation {
+  query
+  path
+  header
+  body
+}
+
+model Endpoint {
+  id          Int                @id @default(autoincrement())
+  method      HttpMethod
+  path        String
+  summary     String
+  description String
+  tags        String[]
+  apiId       Int
+  api         Api                @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  parameters  EndpointParam[]
+  requestBody Json?
+  responses   EndpointResponse[]
+  createdAt   DateTime           @default(now())
+}
+
+model EndpointParam {
+  id          Int           @id @default(autoincrement())
+  name        String
+  location    ParamLocation
+  required    Boolean       @default(false)
+  type        String
+  description String
+  endpointId  Int
+  endpoint    Endpoint      @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+}
+
+model EndpointResponse {
+  id          Int      @id @default(autoincrement())
+  status      Int
+  description String
+  example     Json?
+  endpointId  Int
+  endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 }

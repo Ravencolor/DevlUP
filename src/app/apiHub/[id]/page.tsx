@@ -1,15 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  MOCK_APIS,
-  MOCK_API_DOCS,
-  CATEGORY_COLORS,
-  CATEGORY_ICONS,
-  type Endpoint,
-} from "../mockData";
+import { CATEGORY_COLORS, CATEGORY_ICONS } from "../mockData";
+
+type EndpointParam = {
+  id: number;
+  name: string;
+  location: "query" | "path" | "header" | "body";
+  required: boolean;
+  type: string;
+  description: string;
+};
+
+type EndpointResponse = {
+  id: number;
+  status: number;
+  description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  example: any;
+};
+
+type EndpointData = {
+  id: number;
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+  path: string;
+  summary: string;
+  description: string;
+  tags: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  requestBody: any;
+  parameters: EndpointParam[];
+  responses: EndpointResponse[];
+};
+
+type ApiDetail = {
+  id: number;
+  name: string;
+  description: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  category: string;
+  baseUrl: string | null;
+  version: string;
+  createdAt: string;
+  user: { firstName: string | null; lastName: string | null; emailId: string };
+  endpoints: EndpointData[];
+};
 
 const METHOD_COLORS: Record<string, string> = {
   GET: "bg-green-500",
@@ -29,11 +66,33 @@ const METHOD_BG: Record<string, string> = {
 
 export default function ApiDetailPage() {
   const params = useParams();
-  const apiId = Number(params.id);
-  const api = MOCK_APIS.find((a) => a.id === apiId);
-  const doc = MOCK_API_DOCS.find((d) => d.apiId === apiId);
+  const [api, setApi] = useState<ApiDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (!api) {
+  useEffect(() => {
+    fetch(`/api/apis/${params.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data) => setApi(data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-500">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !api) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -49,7 +108,7 @@ export default function ApiDetailPage() {
     ? `${api.user.firstName || ""} ${api.user.lastName || ""}`.trim()
     : api.user.emailId;
 
-  const tags = doc ? [...new Set(doc.endpoints.flatMap((e) => e.tags || []))] : [];
+  const tags = [...new Set(api.endpoints.flatMap((e) => e.tags || []))];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -75,11 +134,9 @@ export default function ApiDetailPage() {
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${CATEGORY_COLORS[api.category]}`}>
                     {CATEGORY_ICONS[api.category]} {api.category}
                   </span>
-                  {doc && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                      v{doc.version}
-                    </span>
-                  )}
+                  <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                    v{api.version}
+                  </span>
                 </div>
               </div>
             </div>
@@ -109,37 +166,30 @@ export default function ApiDetailPage() {
 
       {/* Documentation */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!doc ? (
+        {api.endpoints.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
             <div className="text-5xl mb-4">📄</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Pas de documentation disponible</h3>
-            <p className="text-gray-500">Cette API n&apos;a pas encore de documentation.</p>
+            <p className="text-gray-500">Cette API n&apos;a pas encore d&apos;endpoints documentés.</p>
           </div>
         ) : (
           <>
-            {/* Tags summary */}
             {tags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 <span className="text-sm font-medium text-gray-500">Tags :</span>
                 {tags.map((tag) => (
-                  <span key={tag} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700">
-                    {tag}
-                  </span>
+                  <span key={tag} className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700">{tag}</span>
                 ))}
               </div>
             )}
 
-            {/* Endpoints count */}
             <div className="mb-6 flex items-center gap-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                📡 Endpoints ({doc.endpoints.length})
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">📡 Endpoints ({api.endpoints.length})</h2>
             </div>
 
-            {/* Endpoint list */}
             <div className="space-y-4">
-              {doc.endpoints.map((endpoint, i) => (
-                <EndpointCard key={i} endpoint={endpoint} baseUrl={api.baseUrl} />
+              {api.endpoints.map((endpoint) => (
+                <EndpointCard key={endpoint.id} endpoint={endpoint} baseUrl={api.baseUrl} />
               ))}
             </div>
           </>
@@ -149,27 +199,19 @@ export default function ApiDetailPage() {
   );
 }
 
-function EndpointCard({ endpoint, baseUrl }: { endpoint: Endpoint; baseUrl: string | null }) {
+function EndpointCard({ endpoint, baseUrl }: { endpoint: EndpointData; baseUrl: string | null }) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className={`rounded-xl border transition-all ${METHOD_BG[endpoint.method]}`}>
-      {/* Header - clickable */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-4 cursor-pointer"
-      >
-        <span className={`${METHOD_COLORS[endpoint.method]} text-white text-xs font-bold px-3 py-1.5 rounded-md min-w-[60px] text-center`}>
-          {endpoint.method}
-        </span>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 px-5 py-4 cursor-pointer">
+        <span className={`${METHOD_COLORS[endpoint.method]} text-white text-xs font-bold px-3 py-1.5 rounded-md min-w-[60px] text-center`}>{endpoint.method}</span>
         <code className="text-sm font-mono text-gray-800 font-semibold">{endpoint.path}</code>
         <span className="text-sm text-gray-500 ml-2 hidden sm:inline">{endpoint.summary}</span>
         {endpoint.tags && endpoint.tags.length > 0 && (
           <div className="ml-auto hidden md:flex items-center gap-1">
             {endpoint.tags.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 bg-white/70 rounded text-[10px] font-medium text-gray-500 border border-gray-200">
-                {tag}
-              </span>
+              <span key={tag} className="px-2 py-0.5 bg-white/70 rounded text-[10px] font-medium text-gray-500 border border-gray-200">{tag}</span>
             ))}
           </div>
         )}
@@ -178,11 +220,9 @@ function EndpointCard({ endpoint, baseUrl }: { endpoint: Endpoint; baseUrl: stri
         </svg>
       </button>
 
-      {/* Body - collapsible */}
       {open && (
         <div className="px-5 pb-5 border-t border-gray-200/50">
           <div className="pt-4 space-y-5">
-            {/* Description */}
             <div>
               <p className="text-sm text-gray-700 leading-relaxed">{endpoint.description}</p>
               {baseUrl && (
@@ -195,7 +235,6 @@ function EndpointCard({ endpoint, baseUrl }: { endpoint: Endpoint; baseUrl: stri
               )}
             </div>
 
-            {/* Parameters */}
             {endpoint.parameters && endpoint.parameters.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">📋 Paramètres</h4>
@@ -211,17 +250,13 @@ function EndpointCard({ endpoint, baseUrl }: { endpoint: Endpoint; baseUrl: stri
                       </tr>
                     </thead>
                     <tbody>
-                      {endpoint.parameters.map((param, i) => (
-                        <tr key={i} className="border-b border-gray-100 last:border-0">
+                      {endpoint.parameters.map((param) => (
+                        <tr key={param.id} className="border-b border-gray-100 last:border-0">
                           <td className="py-2 px-3"><code className="text-xs font-mono text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">{param.name}</code></td>
-                          <td className="py-2 px-3"><span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{param.in}</span></td>
+                          <td className="py-2 px-3"><span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{param.location}</span></td>
                           <td className="py-2 px-3 text-xs text-gray-600">{param.type}</td>
                           <td className="py-2 px-3">
-                            {param.required ? (
-                              <span className="text-xs font-semibold text-red-600">oui</span>
-                            ) : (
-                              <span className="text-xs text-gray-400">non</span>
-                            )}
+                            {param.required ? <span className="text-xs font-semibold text-red-600">oui</span> : <span className="text-xs text-gray-400">non</span>}
                           </td>
                           <td className="py-2 px-3 text-xs text-gray-600">{param.description}</td>
                         </tr>
@@ -232,36 +267,36 @@ function EndpointCard({ endpoint, baseUrl }: { endpoint: Endpoint; baseUrl: stri
               </div>
             )}
 
-            {/* Request Body */}
-            {endpoint.requestBody && (
+            {endpoint.requestBody ? (
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">📦 Corps de la requête</h4>
-                <div className="text-xs text-gray-500 mb-1">Content-Type: <code className="text-purple-600">{endpoint.requestBody.contentType}</code></div>
                 <pre className="bg-gray-900 text-green-400 text-xs rounded-lg p-4 overflow-x-auto font-mono">
-                  {JSON.stringify(endpoint.requestBody.schema, null, 2)}
+                  {String(JSON.stringify(endpoint.requestBody, null, 2))}
                 </pre>
               </div>
-            )}
+            ) : null}
 
-            {/* Responses */}
             <div>
               <h4 className="text-sm font-semibold text-gray-900 mb-2">📨 Réponses</h4>
               <div className="space-y-3">
-                {endpoint.responses.map((res, i) => (
-                  <div key={i} className="rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${res.status < 300 ? "bg-green-100 text-green-700" : res.status < 500 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
-                        {res.status}
-                      </span>
-                      <span className="text-sm text-gray-700">{res.description}</span>
+                {endpoint.responses.map((response) => {
+                  const exampleStr = response.example ? String(JSON.stringify(response.example, null, 2)) : null;
+                  return (
+                    <div key={response.id} className="rounded-lg border border-gray-200 overflow-hidden">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${response.status < 300 ? "bg-green-100 text-green-700" : response.status < 500 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                          {response.status}
+                        </span>
+                        <span className="text-sm text-gray-700">{response.description}</span>
+                      </div>
+                      {exampleStr ? (
+                        <pre className="bg-gray-900 text-green-400 text-xs p-4 overflow-x-auto font-mono border-t border-gray-200">
+                          {exampleStr}
+                        </pre>
+                      ) : null}
                     </div>
-                    {res.example && (
-                      <pre className="bg-gray-900 text-green-400 text-xs p-4 overflow-x-auto font-mono border-t border-gray-200">
-                        {JSON.stringify(res.example as object, null, 2)}
-                      </pre>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -1,17 +1,32 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
-  MOCK_APIS,
   CATEGORIES,
   CATEGORY_COLORS,
   CATEGORY_ICONS,
-  type Api,
 } from "./mockData";
 
+type Api = {
+  id: number;
+  name: string;
+  description: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  category: string;
+  baseUrl: string | null;
+  version: string;
+  createdAt: string;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    emailId: string;
+  };
+};
+
 export default function ApiHubPage() {
-  const [allApis, setAllApis] = useState<Api[]>(MOCK_APIS);
+  const [allApis, setAllApis] = useState<Api[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("ALL");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
@@ -23,6 +38,14 @@ export default function ApiHubPage() {
     category: "OTHER",
     baseUrl: "",
   });
+
+  useEffect(() => {
+    fetch("/api/apis")
+      .then((res) => res.json())
+      .then((data) => setAllApis(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Erreur fetch APIs:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const apis = useMemo(() => {
     return allApis.filter((api) => {
@@ -38,27 +61,26 @@ export default function ApiHubPage() {
     });
   }, [allApis, search, visibilityFilter, categoryFilter]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newApi: Api = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      visibility: formData.visibility as "PUBLIC" | "PRIVATE",
-      category: formData.category,
-      baseUrl: formData.baseUrl || null,
-      createdAt: new Date().toISOString(),
-      user: { firstName: "Moi", lastName: "", emailId: "me@devlup.io" },
-    };
-    setAllApis((prev) => [newApi, ...prev]);
-    setShowModal(false);
-    setFormData({
-      name: "",
-      description: "",
-      visibility: "PUBLIC",
-      category: "OTHER",
-      baseUrl: "",
-    });
+    try {
+      const res = await fetch("/api/apis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          userId: 1, // TODO: utiliser l'utilisateur connecté
+        }),
+      });
+      if (res.ok) {
+        const newApi = await res.json();
+        setAllApis((prev) => [newApi, ...prev]);
+        setShowModal(false);
+        setFormData({ name: "", description: "", visibility: "PUBLIC", category: "OTHER", baseUrl: "" });
+      }
+    } catch (err) {
+      console.error("Erreur création API:", err);
+    }
   };
 
   return (
@@ -163,7 +185,12 @@ export default function ApiHubPage() {
 
       {/* API Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {apis.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500">Chargement des APIs...</p>
+          </div>
+        ) : apis.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
