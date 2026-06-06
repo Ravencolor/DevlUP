@@ -65,14 +65,16 @@ model User {
   emailId       String   @unique
   password      String?
   role          Role     @default(USER)
+  points        Int      @default(0)
   createdAt     DateTime @default(now())
 
-  threads      Thread[]
-  comments     Comment[]
-  threadVotes  ThreadVote[]
-  commentVotes CommentVote[]
-  bookmarks    Bookmark[]
-  apis         Api[]
+  threads        Thread[]
+  comments       Comment[]
+  threadVotes    ThreadVote[]
+  commentVotes   CommentVote[]
+  bookmarks      Bookmark[]
+  apis           Api[]
+  questAttempts  UserQuestAttempt[]
 }
 
 model Thread {
@@ -212,4 +214,27 @@ model EndpointResponse {
   example     Json?
   endpointId  Int
   endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+}
+
+model Quest {
+  id            Int                @id @default(autoincrement())
+  date          String             @unique
+  question      String
+  options       Json
+  correctAnswer Int
+  pointsReward  Int                @default(10)
+  attempts      UserQuestAttempt[]
+}
+
+model UserQuestAttempt {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  questId        Int
+  selectedAnswer Int
+  isCorrect      Boolean
+  answeredAt     DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [userId])
+  quest          Quest    @relation(fields: [questId], references: [id])
+
+  @@unique([userId, questId])
 }
