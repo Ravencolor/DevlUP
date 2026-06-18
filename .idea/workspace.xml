@@ -2,20 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="16f8b94a-b710-4682-b333-54a5ec4a7fde" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(main)/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(main)/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(main)/threads/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(main)/threads/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/auth/signin/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/auth/signin/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/leaderboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/leaderboard/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/quest/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/quest/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/threads/components/ThreadCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/threads/components/ThreadCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/nav/Navbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/nav/Navbar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,7 +17,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "git-widget-placeholder": "feature/daily-quest",
+    "git-widget-placeholder": "main",
     "javascript.preferred.runtime.type.id": "node",
     "ts.external.directory.path": "/Volumes/LaCie/DEV/ecole/file_rouge/DevlUP/node_modules/typescript/lib"
   },
