@@ -226,6 +226,6 @@ model EndpointResponse {
   endpointId  Int
   endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 }
-=======
+
 }
->>>>>>> 359e6ae (feat: drop useless)
+
