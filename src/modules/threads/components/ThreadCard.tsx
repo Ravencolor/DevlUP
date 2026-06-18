@@ -22,7 +22,7 @@ interface ThreadCardProps {
 
 export function ThreadCard({ thread, currentUserId }: ThreadCardProps) {
   return (
-    <div className="bg-white border border-gray-200 py-4 px-4 hover:border-indigo-300 transition-colors flex gap-4">
+    <div className="bg-white rounded-2xl border border-border shadow-sm hover:shadow-md hover:border-primary-200 transition-all duration-200 p-5 flex gap-4">
       {/* Stats column */}
       <div className="flex flex-col items-center gap-3 shrink-0 w-16 pt-1">
         <VoteButtons
@@ -32,8 +32,8 @@ export function ThreadCard({ thread, currentUserId }: ThreadCardProps) {
           initialVote={thread.userVote}
         />
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-700">{thread.commentCount}</p>
-          <p className="text-xs text-gray-400">rép.</p>
+          <p className="text-sm font-bold text-primary-600">{thread.commentCount}</p>
+          <p className="text-[10px] text-gray-400 uppercase font-semibold">rép.</p>
         </div>
       </div>
 
@@ -43,7 +43,7 @@ export function ThreadCard({ thread, currentUserId }: ThreadCardProps) {
         <div className="flex items-start justify-between gap-2">
           <Link
             href={`/threads/${thread.threadId}`}
-            className="text-base font-semibold text-indigo-700 hover:text-indigo-900 transition-colors leading-snug"
+            className="text-base font-semibold text-gray-900 hover:text-primary-700 transition-colors leading-snug"
           >
             {thread.title}
           </Link>
@@ -60,14 +60,14 @@ export function ThreadCard({ thread, currentUserId }: ThreadCardProps) {
           {thread.content}
         </p>
 
-        {/* Bottom row: tags left, author right */}
-        <div className="flex items-center justify-between gap-2 mt-1 flex-wrap">
+        {/* Bottom row */}
+        <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
           <div className="flex flex-wrap gap-1">
             {thread.tags.map(({ tag }) => (
               <Link
                 key={tag.tagId}
                 href={`/threads?tag=${tag.slug}`}
-                className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-medium rounded hover:bg-indigo-100 transition-colors"
+                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary-50 text-primary-700"
               >
                 {tag.name}
               </Link>
@@ -75,7 +75,7 @@ export function ThreadCard({ thread, currentUserId }: ThreadCardProps) {
           </div>
 
           <div className="text-xs text-gray-400 shrink-0">
-            <Link href={`/profile/${thread.author.userId}`} className="text-indigo-600 hover:underline font-medium">
+            <Link href={`/profile/${thread.author.userId}`} className="text-primary-600 hover:underline font-medium">
               {authorName(thread.author)}
             </Link>
             <span className="ml-1">{formatDate(thread.createdAt)}</span>

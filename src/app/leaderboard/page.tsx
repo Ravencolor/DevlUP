@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
 
 interface LeaderboardEntry {
   rank: number;
@@ -57,14 +56,11 @@ export default function LeaderboardPage() {
   const currentUserInTop10 = top10.some((u) => u.isCurrentUser);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black">Classement</h1>
-          <p className="text-gray-500 mt-1">Top 10 des développeurs</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">🏆 Classement</h1>
+          <p className="text-sm text-gray-500 mt-1">Top 10 des développeurs</p>
         </div>
 
         {loading ? (
@@ -140,6 +136,5 @@ export default function LeaderboardPage() {
           </>
         )}
       </main>
-    </div>
   );
 }

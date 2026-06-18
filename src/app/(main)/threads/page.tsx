@@ -27,27 +27,24 @@ export default async function ThreadsPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Toutes les questions</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{total} thread{total !== 1 ? "s" : ""}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">💬 Toutes les questions</h1>
+          <p className="text-sm text-gray-500 mt-1">{total} thread{total !== 1 ? "s" : ""}</p>
         </div>
-        <Link
-          href="/threads/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
-        >
+        <Link href="/threads/new" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-all shadow-sm">
           + Nouveau thread
         </Link>
       </div>
 
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4 pb-4 border-b border-gray-200">
+        <div className="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-border">
           <Link
             href="/threads"
-            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               !tagSlug
-                ? "bg-indigo-600 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:border-indigo-300"
+                ? "bg-primary-600 text-white shadow-sm"
+                : "bg-surface border border-border text-gray-600 hover:border-primary-300"
             }`}
           >
             Tous
@@ -56,10 +53,10 @@ export default async function ThreadsPage({
             <Link
               key={tag.tagId}
               href={`/threads?tag=${tag.slug}`}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 tagSlug === tag.slug
-                  ? "bg-indigo-600 text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:border-indigo-300"
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "bg-surface border border-border text-gray-600 hover:border-primary-300"
               }`}
             >
               {tag.name}
@@ -75,18 +72,18 @@ export default async function ThreadsPage({
           {page > 1 && (
             <Link
               href={`/threads?page=${page - 1}${tagSlug ? `&tag=${tagSlug}` : ""}`}
-              className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-100 transition-all"
             >
               ← Précédent
             </Link>
           )}
           <span className="px-4 py-2 text-sm text-gray-500">
-            Page {page} / {pages} ({total} threads)
+            Page {page} / {pages}
           </span>
           {page < pages && (
             <Link
               href={`/threads?page=${page + 1}${tagSlug ? `&tag=${tagSlug}` : ""}`}
-              className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-100 transition-all"
             >
               Suivant →
             </Link>

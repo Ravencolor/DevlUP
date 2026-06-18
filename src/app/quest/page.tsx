@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
 
 interface Quest {
   id: number;
@@ -86,14 +85,11 @@ export default function QuestPage() {
   const isCorrect = result?.isCorrect ?? attempt?.isCorrect;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black">Quête du jour</h1>
-          <p className="text-gray-500 mt-1 capitalize">{today}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">⚡ Quête du jour</h1>
+          <p className="text-sm text-gray-500 mt-1 capitalize">{today}</p>
         </div>
 
         {loading ? (
@@ -188,6 +184,5 @@ export default function QuestPage() {
           </div>
         )}
       </main>
-    </div>
   );
 }

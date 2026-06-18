@@ -11,8 +11,18 @@
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
         <property name="com.intellij.clouds.kubernetes.db.container.port" />
       </jdbc-additional-properties>
+      <schema-mapping />
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </DataSourceFromHistory>
+  <DataSourceFromHistory isRemovedFromProject="true">
+    <data-source source="LOCAL" name="devlup@localhost [2]" uuid="f33ea2ef-5b5a-4a3a-b84e-571b80c1e1dd">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/devlup</jdbc-url>
       <secret-storage>master_key</secret-storage>
-      <user-name>postgres</user-name>
       <schema-mapping />
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
