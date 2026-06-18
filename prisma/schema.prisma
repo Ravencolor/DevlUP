@@ -13,7 +13,6 @@ enum Gender {
   OTHER
 }
 
-<<<<<<< HEAD
 enum Role {
   USER
   MODERATOR
@@ -23,18 +22,6 @@ enum Role {
 enum VoteType {
   UP
   DOWN
-=======
-model User {
-  userId        Int     @id @default(autoincrement())
-  firstName     String?
-  lastName      String? @default("")
-  gender        Gender?
-  contactNumber String?
-  emailId       String  @unique
-  password      String?
-<<<<<<< HEAD
-  apis          Api[]
->>>>>>> 2426fca (feat: drop useless)
 }
 
 enum ApiVisibility {
@@ -52,6 +39,21 @@ enum ApiCategory {
   ECOMMERCE
   COMMUNICATION
   OTHER
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+}
+
+enum ParamLocation {
+  query
+  path
+  header
+  body
 }
 
 model User {
@@ -177,21 +179,6 @@ model Api {
   endpoints   Endpoint[]
 }
 
-enum HttpMethod {
-  GET
-  POST
-  PUT
-  DELETE
-  PATCH
-}
-
-enum ParamLocation {
-  query
-  path
-  header
-  body
-}
-
 model Endpoint {
   id          Int                @id @default(autoincrement())
   method      HttpMethod
@@ -226,6 +213,3 @@ model EndpointResponse {
   endpointId  Int
   endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 }
-
-}
-
