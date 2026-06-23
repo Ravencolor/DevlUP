@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/db/client";
+import { getSessionUserId } from "@/lib/auth/session";
+import { toApiError, UnauthorizedError } from "@/lib/utils/errors";
 
 // GET - Liste toutes les APIs
 export async function GET(request: NextRequest) {
@@ -44,23 +44,23 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(apis);
   } catch (error) {
-    console.error("Error fetching APIs:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des APIs" },
-      { status: 500 }
-    );
+    const { message, status } = toApiError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
 // POST - Créer une nouvelle API
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, description, visibility, category, baseUrl, userId } = body;
+    const userId = await getSessionUserId();
+    if (!userId) throw new UnauthorizedError();
 
-    if (!name || !description || !userId) {
+    const body = await request.json();
+    const { name, description, visibility, category, baseUrl } = body;
+
+    if (!name || !description) {
       return NextResponse.json(
-        { error: "Nom, description et userId sont requis" },
+        { error: "Nom et description sont requis" },
         { status: 400 }
       );
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         description,
         visibility: visibility || "PUBLIC",
         category: category || "OTHER",
-        baseUrl: baseUrl || null,
+        baseUrl: baseUrl?.trim() ? baseUrl.trim() : null,
         userId,
       },
       include: {
@@ -87,11 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(api, { status: 201 });
   } catch (error) {
-    console.error("Error creating API:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création de l'API" },
-      { status: 500 }
-    );
+    const { message, status } = toApiError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 }
-

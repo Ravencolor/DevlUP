@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   CATEGORIES,
   CATEGORY_COLORS,
@@ -25,12 +26,14 @@ type Api = {
 };
 
 export default function ApiHubPage() {
+  const { data: session } = useSession();
   const [allApis, setAllApis] = useState<Api[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("ALL");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [showModal, setShowModal] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -63,15 +66,26 @@ export default function ApiHubPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!session?.user?.id) {
+      setFormError("Connectez-vous pour publier une API.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/apis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          userId: 1, // TODO: utiliser l'utilisateur connecté
-        }),
+        body: JSON.stringify(formData),
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setFormError(data.error || "Impossible de publier cette API.");
+        return;
+      }
+
       if (res.ok) {
         const newApi = await res.json();
         setAllApis((prev) => [newApi, ...prev]);
@@ -90,6 +104,15 @@ export default function ApiHubPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
+              <Link
+                href="/threads"
+                className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-3"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Retour au forum
+              </Link>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   🔌 API Hub
@@ -253,6 +276,11 @@ export default function ApiHubPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-5">
+              {formError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nom de l&apos;API *
@@ -342,6 +370,7 @@ export default function ApiHubPage() {
                 </button>
                 <button
                   type="submit"
+                  disabled={!session?.user?.id}
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer"
                 >
                   Publier

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { CATEGORY_COLORS, CATEGORY_ICONS } from "../mockData";
 
 type EndpointParam = {
@@ -37,6 +38,7 @@ type EndpointData = {
 
 type ApiDetail = {
   id: number;
+  userId: number;
   name: string;
   description: string;
   visibility: "PUBLIC" | "PRIVATE";
@@ -66,9 +68,23 @@ const METHOD_BG: Record<string, string> = {
 
 export default function ApiDetailPage() {
   const params = useParams();
+  const { data: session } = useSession();
   const [api, setApi] = useState<ApiDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [endpointForm, setEndpointForm] = useState({
+    method: "GET",
+    path: "",
+    summary: "",
+    description: "",
+    tags: "",
+    requestBody: "",
+    responseStatus: "200",
+    responseDescription: "Succès",
+    responseExample: "",
+  });
 
   useEffect(() => {
     fetch(`/api/apis/${params.id}`)
@@ -107,18 +123,105 @@ export default function ApiDetailPage() {
   const authorName = api.user.firstName || api.user.lastName
     ? `${api.user.firstName || ""} ${api.user.lastName || ""}`.trim()
     : api.user.emailId;
+  const isOwner = Number(session?.user?.id) === api.userId;
 
   const tags = [...new Set(api.endpoints.flatMap((e) => e.tags || []))];
+
+  const handleCreateEndpoint = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+
+    let parsedRequestBody: Record<string, unknown> | null = null;
+    if (endpointForm.requestBody.trim()) {
+      try {
+        const parsed = JSON.parse(endpointForm.requestBody);
+        if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+          setSubmitError("Le corps de requête doit être un objet JSON.");
+          return;
+        }
+        parsedRequestBody = parsed;
+      } catch {
+        setSubmitError("Le JSON du corps de requête est invalide.");
+        return;
+      }
+    }
+
+    let parsedResponseExample: unknown = null;
+    if (endpointForm.responseExample.trim()) {
+      try {
+        parsedResponseExample = JSON.parse(endpointForm.responseExample);
+      } catch {
+        setSubmitError("Le JSON de l'exemple de réponse est invalide.");
+        return;
+      }
+    }
+
+    const responseStatus = parseInt(endpointForm.responseStatus, 10);
+    if (!Number.isInteger(responseStatus)) {
+      setSubmitError("Le statut HTTP de réponse est invalide.");
+      return;
+    }
+
+    const res = await fetch(`/api/apis/${api.id}/endpoints`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        method: endpointForm.method,
+        path: endpointForm.path,
+        summary: endpointForm.summary,
+        description: endpointForm.description,
+        tags: endpointForm.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        requestBody: parsedRequestBody,
+        responses: [
+          {
+            status: responseStatus,
+            description: endpointForm.responseDescription,
+            example: parsedResponseExample,
+          },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setSubmitError(data.error || "Impossible d'ajouter cet endpoint.");
+      return;
+    }
+
+    const newEndpoint = await res.json();
+    setApi((prev) => {
+      if (!prev) return prev;
+      return { ...prev, endpoints: [...prev.endpoints, newEndpoint] };
+    });
+    setShowModal(false);
+    setEndpointForm({
+      method: "GET",
+      path: "",
+      summary: "",
+      description: "",
+      tags: "",
+      requestBody: "",
+      responseStatus: "200",
+      responseDescription: "Succès",
+      responseExample: "",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/apiHub" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-4">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Retour au Hub
-          </Link>
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/apiHub" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              Retour au Hub
+            </Link>
+            <Link href="/threads" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              Retour au forum
+            </Link>
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-start gap-4">
@@ -161,6 +264,17 @@ export default function ApiDetailPage() {
               <code className="text-sm text-green-400 font-mono">{api.baseUrl}</code>
             </div>
           )}
+
+          {isOwner && (
+            <div className="mt-4">
+              <button
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] cursor-pointer"
+              >
+                + Ajouter un endpoint
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -195,6 +309,168 @@ export default function ApiDetailPage() {
           </>
         )}
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Documenter un endpoint</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateEndpoint} className="space-y-4">
+              {submitError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {submitError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Méthode</label>
+                  <select
+                    value={endpointForm.method}
+                    onChange={(e) => setEndpointForm((prev) => ({ ...prev, method: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white"
+                  >
+                    {["GET", "POST", "PUT", "PATCH", "DELETE"].map((method) => (
+                      <option key={method} value={method}>
+                        {method}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Path</label>
+                  <input
+                    required
+                    value={endpointForm.path}
+                    onChange={(e) => setEndpointForm((prev) => ({ ...prev, path: e.target.value }))}
+                    placeholder="/users/{id}"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Résumé</label>
+                <input
+                  required
+                  value={endpointForm.summary}
+                  onChange={(e) => setEndpointForm((prev) => ({ ...prev, summary: e.target.value }))}
+                  placeholder="Récupérer un utilisateur"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={endpointForm.description}
+                  onChange={(e) => setEndpointForm((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Décrit ce que fait l'endpoint..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tags (séparés par des virgules)</label>
+                <input
+                  value={endpointForm.tags}
+                  onChange={(e) => setEndpointForm((prev) => ({ ...prev, tags: e.target.value }))}
+                  placeholder="users, profile"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status réponse</label>
+                  <input
+                    required
+                    type="number"
+                    value={endpointForm.responseStatus}
+                    onChange={(e) => setEndpointForm((prev) => ({ ...prev, responseStatus: e.target.value }))}
+                    placeholder="200"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description réponse</label>
+                  <input
+                    required
+                    value={endpointForm.responseDescription}
+                    onChange={(e) => setEndpointForm((prev) => ({ ...prev, responseDescription: e.target.value }))}
+                    placeholder="Succès"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Corps de requête (JSON objet, optionnel)</label>
+                <textarea
+                  rows={4}
+                  value={endpointForm.requestBody}
+                  onChange={(e) => setEndpointForm((prev) => ({ ...prev, requestBody: e.target.value }))}
+                  placeholder={'{ "name": "John Doe" }'}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-mono text-xs resize-y"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Exemple de réponse (JSON, optionnel)</label>
+                <textarea
+                  rows={4}
+                  value={endpointForm.responseExample}
+                  onChange={(e) => setEndpointForm((prev) => ({ ...prev, responseExample: e.target.value }))}
+                  placeholder={'{ "id": 1, "name": "John Doe" }'}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-mono text-xs resize-y"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -305,5 +581,3 @@ function EndpointCard({ endpoint, baseUrl }: { endpoint: EndpointData; baseUrl: 
     </div>
   );
 }
-
-
